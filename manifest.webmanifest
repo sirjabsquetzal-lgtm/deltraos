@@ -1,0 +1,18 @@
+{
+  "name": "DeltraOS",
+  "short_name": "DeltraOS",
+  "description": "Modelo de ejecucion y diario de trading JABS — sesiones, plan compuesto y checklist de 4 pasos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0c0b",
+  "theme_color": "#0d0c0b",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
