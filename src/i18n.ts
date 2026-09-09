@@ -257,7 +257,7 @@ export const STR = {
   trendStructure1h: S('Tendencia / estructura 1H', '1H trend / structure'),
   trendStructure15m: S('Tendencia / estructura 15m', '15m trend / structure'),
   structureCvd5m: S('Estructura / CVD 5m', '5m structure / CVD'),
-  structureCvd3m: S('Estructura / CVD 3m', '3m structure / CVD'),
+  lowerTimeframe: S('Temporalidad', 'Timeframe'),
   noNotes: S('Sin notas.', 'No notes.'),
 
   // new plan sheet
@@ -512,6 +512,11 @@ export function tMoveMeta(lang: Lang, planName: string, day: number, note: strin
 }
 export function tStepOf4(lang: Lang, n: number): string {
   return lang === 'EN' ? `— Step ${n} of 4` : `— Paso ${n} de 4`;
+}
+
+/** Same wording as `structureCvd5m`, but for whichever lower timeframe (1m or 3m) was picked. */
+export function tStructureCvd(lang: Lang, tf: string): string {
+  return lang === 'EN' ? `${tf} structure / CVD` : `Estructura / CVD ${tf}`;
 }
 
 export function tDayRiskLine(lang: Lang, day: string, risk: string): string {

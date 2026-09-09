@@ -71,10 +71,21 @@ export default function Step4AuctionZone() {
         </div>
       </div>
 
-      {/* 3m row */}
+      {/* Lower timeframe row — 1m or 3m, picked with the toggle below */}
       <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--color-divider)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="dos-num" style={{ background: 'var(--color-text)', color: 'var(--color-bg)', padding: '3px 8px', fontSize: 12 }}>3m</span>
+          <div className="dos-tf-toggle" role="group" aria-label={t('lowerTimeframe')}>
+            {(['1m', '3m'] as const).map((tf) => (
+              <button
+                key={tf}
+                type="button"
+                className={'dos-tf-opt' + (s.tf2 === tf ? ' dos-tf-opt-active' : '')}
+                onClick={() => dispatch({ type: 'SET_SNAP', k: 'tf2', v: tf })}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
           <select className="input" style={{ flex: 1 }} value={s.t3m} onChange={(e) => dispatch({ type: 'SET_SNAP', k: 't3m', v: e.currentTarget.value })}>
             <option value="Bullish">{t('trendBullish')}</option>
             <option value="Bearish">{t('trendBearish')}</option>

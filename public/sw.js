@@ -10,7 +10,7 @@
 // bundle that no longer exists on the server (404), and the app never
 // mounts — a blank white screen. So HTML/navigation requests go
 // network-first, with the cache only as an offline fallback.
-const CACHE = 'deltraos-v3';
+const CACHE = 'deltraos-v4';
 const BASE = new URL('./', self.location).href;
 const SHELL = [BASE, BASE + 'index.html', BASE + 'manifest.webmanifest'];
 

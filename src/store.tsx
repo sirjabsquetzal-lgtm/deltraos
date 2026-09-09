@@ -24,6 +24,7 @@ function defaultSnapshot(): TradeSnapshot {
     t1h: 'Bullish', s1h: 'Pennant', z1h: 'Yes',
     t15: 'Bullish', s15: 'Consolidation', z15: 'No',
     t5m: 'Bullish', s5m: 'Consolidation', cvd5m: 'None', h5m: 'Above price',
+    tf2: '3m',
     t3m: 'Bullish', s3m: 'Bart', cvd3m: 'Bullish', h3m: 'Above price',
     vaMatch: 'Yes', strength: 'High', divZone: 'VAL',
     pattern: 'Doji', reason: 'Take Profit', result: 'Profit',
@@ -438,8 +439,9 @@ function reducer(state: AppState, action: Action): AppState {
       // Merge onto defaultState() rather than trusting the file verbatim —
       // same defensiveness as load() below — so a backup made by an older
       // version of the app (missing a field a newer build added) still
-      // restores cleanly instead of leaving that field undefined.
-      return { ...defaultState(), ...action.state };
+      // restores cleanly instead of leaving that field undefined. `s` is
+      // merged one level deeper for the same reason (see load()).
+      return { ...defaultState(), ...action.state, s: { ...defaultSnapshot(), ...action.state.s } };
 
     default:
       return state;
@@ -451,7 +453,10 @@ function load(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return { ...defaultState(), ...parsed };
+    // `s` is merged one level deeper than the rest: a snapshot saved by an
+    // older build (e.g. before `tf2` existed) would otherwise wholesale
+    // replace defaultSnapshot() and drop newer fields it never had.
+    return { ...defaultState(), ...parsed, s: { ...defaultSnapshot(), ...parsed.s } };
   } catch {
     return defaultState();
   }
