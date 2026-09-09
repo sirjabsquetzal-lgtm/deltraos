@@ -1,7 +1,9 @@
 import type { DragEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppState, useDispatch } from '../store';
 import { useTranslator, tImagesCount } from '../i18n';
 import { IconX } from '../icons';
+import { idbDelete, idbGet, idbSet, STORE_DREAMS } from '../idb';
 
 export default function Dreams() {
   const state = useAppState();
@@ -9,19 +11,79 @@ export default function Dreams() {
   const lang = state.settings.lang;
   const t = useTranslator(lang);
 
+  // Uploaded images are persisted as Blobs in IndexedDB (keyed by dream id)
+  // — the `src` string that lives in the persisted app state is a blob:
+  // object URL, which stops working the moment the page reloads. This map
+  // holds freshly-created object URLs for whichever dreams we own a stored
+  // Blob for, and takes priority over `d.src` when rendering. Seed dreams
+  // (bundled /why/*.png assets) have no IndexedDB entry, so they keep using
+  // `d.src` untouched.
+  const [resolvedSrc, setResolvedSrc] = useState<Record<string, string>>({});
+  const ownedUrls = useRef<Set<string>>(new Set());
+
+  // Rehydrate every previously-uploaded image once, on mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        state.dreams.map(async (d) => {
+          const blob = await idbGet<Blob>(STORE_DREAMS, d.id).catch(() => undefined);
+          return blob ? ([d.id, URL.createObjectURL(blob)] as const) : null;
+        })
+      );
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const entry of entries) {
+        if (!entry) continue;
+        const [id, url] = entry;
+        map[id] = url;
+        ownedUrls.current.add(url);
+      }
+      setResolvedSrc((prev) => ({ ...prev, ...map }));
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rehydrate once per mount, not on every dream-list edit
+  }, []);
+
+  // Revoke every object URL we created when the screen unmounts (e.g. the
+  // user switches tabs) — they get recreated fresh next time it mounts.
+  useEffect(() => () => {
+    ownedUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    ownedUrls.current.clear();
+  }, []);
+
   const onAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.currentTarget.files || []);
     e.currentTarget.value = '';
     if (!files.length) return;
-    const items = files.map((f, i) => ({ id: 'd' + Date.now() + '-' + i, src: URL.createObjectURL(f), ratio: 1 }));
-    dispatch({ type: 'ADD_DREAMS', items });
+    const items = files.map((f, i) => ({ id: 'd' + Date.now() + '-' + i, src: URL.createObjectURL(f), ratio: 1, file: f }));
+    dispatch({ type: 'ADD_DREAMS', items: items.map(({ id, src, ratio }) => ({ id, src, ratio })) });
+    setResolvedSrc((prev) => {
+      const next = { ...prev };
+      for (const item of items) { next[item.id] = item.src; ownedUrls.current.add(item.src); }
+      return next;
+    });
     items.forEach((item) => {
       const probe = new Image();
       probe.onload = () => {
         dispatch({ type: 'UPDATE_DREAM_RATIO', id: item.id, ratio: probe.width / probe.height });
       };
       probe.src = item.src;
+      idbSet(STORE_DREAMS, item.id, item.file).catch(() => {});
     });
+  };
+
+  const onRemove = (id: string) => {
+    dispatch({ type: 'REMOVE_DREAM', id });
+    const url = resolvedSrc[id];
+    if (url) { URL.revokeObjectURL(url); ownedUrls.current.delete(url); }
+    setResolvedSrc((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    idbDelete(STORE_DREAMS, id).catch(() => {});
   };
 
   return (
@@ -45,6 +107,7 @@ export default function Dreams() {
           {state.dreams.map((d) => {
             const dragging = state.dragId === d.id;
             const over = state.overId === d.id && state.dragId !== d.id;
+            const src = resolvedSrc[d.id] || d.src;
             const onDragStart = (e: DragEvent<HTMLDivElement>) => {
               if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', d.id); } catch { /* noop */ } }
               dispatch({ type: 'DREAM_DRAG_START', id: d.id });
@@ -69,9 +132,9 @@ export default function Dreams() {
                 onDragEnd={() => dispatch({ type: 'DREAM_DRAG_END' })}
                 style={{ opacity: dragging ? 0.4 : 1, outline: over ? '2px solid var(--color-accent)' : 'none', outlineOffset: -2 }}
               >
-                <div style={{ width: '100%', aspectRatio: String(d.ratio), backgroundColor: 'var(--color-neutral-200)', backgroundImage: `url(${d.src})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div style={{ width: '100%', aspectRatio: String(d.ratio), backgroundColor: 'var(--color-neutral-200)', backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <button
-                  onClick={() => dispatch({ type: 'REMOVE_DREAM', id: d.id })}
+                  onClick={() => onRemove(d.id)}
                   style={{ position: 'absolute', top: 0, right: 0, width: 26, height: 26, border: 0, background: 'var(--color-accent-700)', color: 'var(--color-bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                   aria-label={t('delete')}
                 >

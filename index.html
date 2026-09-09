@@ -2,8 +2,22 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
-    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png" />
+    <!--
+      Icon files (below, and in public/manifest.webmanifest) are cached
+      aggressively — by our own service worker (cache-first for static
+      assets) and by Brave/Chromium's installed-PWA icon, which doesn't
+      recheck the manifest on every launch. Their filenames never change on
+      their own, so replacing icon bytes without renaming leaves everyone
+      stuck on the old icon indefinitely. Whenever you swap an icon file,
+      bump every "?v=N" below (and the matching ones in manifest.webmanifest)
+      by one — that turns it into a new URL, which both caches treat as a
+      fresh resource instead of stale bytes to reuse. An already-installed
+      PWA still needs a reinstall to pick up the new icon; the version bump
+      is what makes a *fresh* install (or a browser tab) always get the
+      latest one instead of whatever got cached first.
+    -->
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg?v=1" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png?v=1" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
     <meta name="theme-color" content="#0a0908" />
