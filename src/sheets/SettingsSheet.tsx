@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useAppState, useDispatch, useNow } from '../store';
-import { useTranslator, tZoneDetected } from '../i18n';
+import { useTranslator, tZoneDetected, tRestoreSummary } from '../i18n';
 import { SheetOverlay, SheetPanel, Seg } from '../ui';
 import { getLocalClock, getLocalZone, INSTRUMENTS } from '../view';
 import { useMediaTrack } from '../mediaContext';
 import type { InstrumentCode } from '../types';
+import { exportBackup, importBackup } from '../backup';
 
 export default function SettingsSheet() {
   const state = useAppState();
@@ -12,10 +14,47 @@ export default function SettingsSheet() {
   const lang = state.settings.lang;
   const t = useTranslator(lang);
   const track = useMediaTrack();
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [restoreBusy, setRestoreBusy] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<string | null>(null);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.currentTarget.files?.[0];
     if (file) track.setFile(file);
+  };
+
+  const onDownloadBackup = async () => {
+    setBackupBusy(true);
+    setBackupStatus(null);
+    try {
+      await exportBackup(state);
+    } catch {
+      setBackupStatus(t('restoreGenericError'));
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const onRestoreFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = '';
+    if (!file) return;
+    if (!window.confirm(t('restoreConfirm'))) return;
+    setRestoreBusy(true);
+    setBackupStatus(null);
+    try {
+      const { state: restored, imageCount, hasAudio } = await importBackup(file);
+      dispatch({ type: 'RESTORE_STATE', state: restored });
+      setBackupStatus(tRestoreSummary(lang, imageCount, hasAudio));
+      // Sueños images and the meditation track only load from IndexedDB
+      // once, on mount — a full reload is the simplest reliable way to get
+      // every screen to pick up what restore just wrote, exactly like a
+      // normal app start.
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      setBackupStatus((err as Error)?.message === 'not-a-backup' ? t('restoreInvalidFile') : t('restoreGenericError'));
+      setRestoreBusy(false);
+    }
   };
 
   return (
@@ -85,12 +124,35 @@ export default function SettingsSheet() {
           <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-neutral-700)' }}>{t('stepOneNotSkippable')}</div>
         </div>
 
-        <div style={{ padding: 16 }}>
+        <div style={{ padding: 16, borderBottom: '1px solid var(--color-divider)' }}>
           <div className="dos-k" style={{ marginBottom: 6 }}>{t('sessionState')}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <span className={'tag ' + (state.locked ? 'tag-accent' : 'tag-neutral')}>{state.locked ? t('sessionLocked') : t('sessionOpen')}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{t('day')} {state.day}</span>
           </div>
+        </div>
+
+        <div style={{ padding: 16 }}>
+          <div className="dos-k" style={{ marginBottom: 6 }}>{t('backupRestore')}</div>
+          <p style={{ fontSize: 12, margin: '0 0 10px', color: 'var(--color-neutral-700)' }}>{t('backupBody')}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <button className="btn btn-secondary" onClick={onDownloadBackup} disabled={backupBusy || restoreBusy}>
+              {backupBusy ? t('downloadingBackup') : t('downloadBackup')}
+            </button>
+            <label className="btn btn-ghost" style={{ cursor: restoreBusy ? 'default' : 'pointer', margin: 0, opacity: restoreBusy ? 0.6 : 1 }}>
+              {restoreBusy ? t('restoringBackup') : t('restoreBackup')}
+              <input
+                type="file"
+                accept=".zip,application/zip"
+                onChange={onRestoreFile}
+                disabled={backupBusy || restoreBusy}
+                style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+              />
+            </label>
+          </div>
+          {backupStatus && (
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-accent)' }}>{backupStatus}</div>
+          )}
         </div>
       </SheetPanel>
     </SheetOverlay>

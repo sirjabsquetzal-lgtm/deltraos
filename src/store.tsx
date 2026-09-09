@@ -111,7 +111,8 @@ export type Action =
   | { type: 'DREAM_DROP'; toId: string }
   | { type: 'INIT_SESSION_KEY'; key: string }
   | { type: 'ROLL_DAY'; key: string }
-  | { type: 'RESET_ALL' };
+  | { type: 'RESET_ALL' }
+  | { type: 'RESTORE_STATE'; state: AppState };
 
 function patchPlan(plans: Plan[], id: string, patch: Partial<Plan>): Plan[] {
   return plans.map((p) => (p.id === id ? { ...p, ...patch } : p));
@@ -432,6 +433,13 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'RESET_ALL':
       return defaultState();
+
+    case 'RESTORE_STATE':
+      // Merge onto defaultState() rather than trusting the file verbatim —
+      // same defensiveness as load() below — so a backup made by an older
+      // version of the app (missing a field a newer build added) still
+      // restores cleanly instead of leaving that field undefined.
+      return { ...defaultState(), ...action.state };
 
     default:
       return state;

@@ -352,6 +352,29 @@ export const STR = {
   ),
   sessionState: S('Estado de la sesión', 'Session state'),
 
+  // backup / restore
+  backupRestore: S('Respaldo y restauración', 'Backup & restore'),
+  backupBody: S(
+    'Todo vive solo en este navegador: trades, plan, Sueños y el audio de meditación. Descarga un respaldo para guardarlo o llevarlo a otro dispositivo.',
+    'Everything lives only in this browser: trades, plan, Sueños, and the meditation audio. Download a backup to keep it safe or move it to another device.'
+  ),
+  downloadBackup: S('Descargar respaldo', 'Download backup'),
+  downloadingBackup: S('Preparando…', 'Preparing…'),
+  restoreBackup: S('Restaurar desde un respaldo', 'Restore from a backup'),
+  restoringBackup: S('Restaurando…', 'Restoring…'),
+  restoreConfirm: S(
+    'Esto reemplaza todos los datos actuales de este dispositivo (trades, plan, Sueños, audio) con los del respaldo. Esta acción no se puede deshacer. ¿Continuar?',
+    'This replaces all current data on this device (trades, plan, Sueños, audio) with what is in the backup. This cannot be undone. Continue?'
+  ),
+  restoreInvalidFile: S(
+    'Ese archivo no parece un respaldo de DeltraOS.',
+    "That file doesn't look like a DeltraOS backup."
+  ),
+  restoreGenericError: S(
+    'No se pudo leer el respaldo. Verifica el archivo e inténtalo de nuevo.',
+    "Couldn't read the backup. Check the file and try again."
+  ),
+
   // no plan ask
   noPlanFoundLabel: S('No hay plan', 'No plan found'),
   createAPlanFirstTitle: S('Crea un plan primero', 'Create a plan first'),
@@ -455,6 +478,11 @@ export function tProbability(lang: Lang, pct: number): string {
 export function tImagesCount(lang: Lang, n: number): string {
   if (lang === 'EN') return n === 1 ? '1 image' : `${n} images`;
   return n === 1 ? '1 imagen' : `${n} imágenes`;
+}
+export function tRestoreSummary(lang: Lang, imageCount: number, hasAudio: boolean): string {
+  const images = tImagesCount(lang, imageCount);
+  if (lang === 'EN') return `Restored — ${images}${hasAudio ? ' and the meditation track' : ''}.`;
+  return `Restaurado — ${images}${hasAudio ? ' y el audio de meditación' : ''}.`;
 }
 export function tCmeNote(lang: Lang, resetHhmm: string, nowHhmm: string): string {
   return lang === 'EN'
