@@ -12,6 +12,8 @@ export type DivZone = 'VAL' | 'VAH' | 'POC 5m';
 export type Strength = 'Low' | 'Medium' | 'High';
 export type InsaneLines = 'Above level 0' | 'Below level 0';
 export type InsaneSide = 'Long confirmed' | 'Short confirmed' | 'Not confirmed';
+/** The lower timeframe of the two auction-zone rows: user-selectable, only for that second row. */
+export type LtfTimeframe = '1m' | '3m';
 
 export type InstrumentCode = 'MBT' | 'MGC' | 'BTC' | 'BFF' | 'GC' | '1OZ';
 
@@ -57,6 +59,8 @@ export interface TradeSnapshot {
   t1h: Trend; s1h: string; z1h: YesNo;
   t15: Trend; s15: string; z15: YesNo;
   t5m: Trend; s5m: string; cvd5m: string; h5m: HeatSide;
+  /** Timeframe the second auction-zone row (below) is currently reading — chosen via its 1m/3m toggle. */
+  tf2: LtfTimeframe;
   t3m: Trend; s3m: string; cvd3m: string; h3m: HeatSide;
   vaMatch: YesNo;
   strength: Strength;

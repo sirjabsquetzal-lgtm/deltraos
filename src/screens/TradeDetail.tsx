@@ -1,5 +1,5 @@
 import { useAppState, useDispatch } from '../store';
-import { useTranslator, enumLabel } from '../i18n';
+import { useTranslator, enumLabel, tStructureCvd } from '../i18n';
 import { BackLink } from '../ui';
 import { money } from '../view';
 
@@ -38,7 +38,7 @@ export default function TradeDetail() {
     { k: t('trendStructure1h'), v: `${enumLabel(lang, g.t1h)} · ${enumLabel(lang, g.s1h)}` },
     { k: t('trendStructure15m'), v: `${enumLabel(lang, g.t15)} · ${enumLabel(lang, g.s15)}` },
     { k: t('structureCvd5m'), v: `${enumLabel(lang, g.s5m)} · ${enumLabel(lang, g.cvd5m)}` },
-    { k: t('structureCvd3m'), v: `${enumLabel(lang, g.s3m)} · ${enumLabel(lang, g.cvd3m)}` },
+    { k: tStructureCvd(lang, g.tf2 ?? '3m'), v: `${enumLabel(lang, g.s3m)} · ${enumLabel(lang, g.cvd3m)}` },
     { k: t('divergenceStrength'), v: enumLabel(lang, g.strength) },
     { k: t('operatingZone'), v: trade.zone },
     { k: t('insaneScalpConfirmation'), v: `${enumLabel(lang, g.insaneLines)} · ${enumLabel(lang, g.insaneSide)}` },

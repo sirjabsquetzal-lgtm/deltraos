@@ -135,6 +135,16 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-mono), var(--font-heading);
   font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
 }
+.dos-tf-toggle {
+  display: inline-flex; flex: none; border: 1px solid var(--color-text); border-radius: 0; overflow: hidden;
+}
+.dos-tf-opt {
+  font-family: var(--font-mono), var(--font-heading);
+  font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
+  padding: 3px 9px; border: 0; background: var(--color-bg); color: var(--color-text); cursor: pointer;
+}
+.dos-tf-opt + .dos-tf-opt { border-left: 1px solid var(--color-text); }
+.dos-tf-opt-active { background: var(--color-text); color: var(--color-bg); }
 .dos-bar { background: #0a0908; color: #f3f2f2; flex: none; }
 .dos-glyph { width: 9px; height: 9px; flex: none; border-radius: 50%; }
 .dos-row {
